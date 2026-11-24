@@ -1,0 +1,19 @@
+{
+  "name": "open-cap-services",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "open-cap backend services: backend (API), collector, evaluator, presenter",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "backend": "node backend/index.js",
+    "collector": "node collector/index.js",
+    "evaluator": "node evaluator/index.js",
+    "presenter": "node presenter/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.13.1"
+  }
+}

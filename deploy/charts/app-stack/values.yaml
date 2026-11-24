@@ -1,0 +1,59 @@
+hostname: cap.bupasec.com
+gatewayName: cap-gateway
+
+imagePullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Secrets created out-of-band (scripts/bootstrap-secrets.sh). Never templated.
+secrets:
+  db: cap-db-credentials        # APP_DB_PASSWORD
+  app: cap-app-secrets          # JWT_SECRET, CAP_ENCRYPTION_KEY, ADMIN_PASSWORD
+
+db:
+  host: cap-db
+  port: 5432
+  name: cap
+  user: cap_app
+
+logLevel: info
+
+frontend:
+  image: cap-frontend:1
+  replicas: 1
+  resources: { requests: { cpu: 20m, memory: 32Mi }, limits: { memory: 128Mi } }
+
+backend:
+  image: cap-backend:1
+  replicas: 1
+  adminUsername: admin
+  seedCatalog: true
+  sessionHours: 12
+  resources: { requests: { cpu: 50m, memory: 96Mi }, limits: { memory: 512Mi } }
+
+collector:
+  image: cap-collector:1
+  replicas: 1
+  parallelRuns: 2
+  resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 1Gi } }
+
+evaluator:
+  image: cap-evaluator:1
+  replicas: 2
+  batch: 25
+  concurrency: 4
+  sweepSeconds: 60
+  resources: { requests: { cpu: 50m, memory: 96Mi }, limits: { memory: 512Mi } }
+  opa:
+    image: openpolicyagent/opa:1.4.2-static
+    resources: { requests: { cpu: 50m, memory: 64Mi }, limits: { memory: 512Mi } }
+
+presenter:
+  image: cap-presenter:1
+  replicas: 1
+  snapshotMinutes: 15
+  resources: { requests: { cpu: 50m, memory: 96Mi }, limits: { memory: 512Mi } }
+
+networkPolicy:
+  enabled: true
+  # Namespace where Envoy Gateway runs its proxies (default deploy mode).
+  gatewayNamespace: envoy-gateway-system

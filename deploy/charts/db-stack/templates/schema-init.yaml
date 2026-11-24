@@ -1,0 +1,71 @@
+{{- if .Values.schema.enabled }}
+# files/schema.sql is idempotent, so the Job runs on every install/upgrade.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cap-db-schema
+data:
+  schema.sql: |
+{{ .Files.Get "files/schema.sql" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cap-db-schema
+  labels:
+    app.kubernetes.io/name: cap-db-schema
+    app.kubernetes.io/part-of: open-cap
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    # The checksum makes every schema change produce a new Job spec.
+    checksum/schema: {{ .Files.Get "files/schema.sql" | sha256sum }}
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cap-db-schema
+        app.kubernetes.io/part-of: open-cap
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: psql
+          image: {{ .Values.postgres.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGHOST
+              value: {{ .Values.postgres.serviceName }}
+            - name: PGPORT
+              value: {{ .Values.postgres.port | quote }}
+            - name: PGUSER
+              value: postgres
+            - name: PGDATABASE
+              value: {{ .Values.postgres.database | quote }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: POSTGRES_PASSWORD
+            - name: APP_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: APP_DB_PASSWORD
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              until pg_isready -q; do echo "waiting for postgres"; sleep 2; done
+              psql -v ON_ERROR_STOP=1 -v app_password="$APP_DB_PASSWORD" -f /sql/schema.sql
+              echo "schema applied"
+          volumeMounts:
+            - name: sql
+              mountPath: /sql
+              readOnly: true
+      volumes:
+        - name: sql
+          configMap:
+            name: cap-db-schema
+{{- end }}

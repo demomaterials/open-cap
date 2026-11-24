@@ -1,0 +1,9 @@
+# EKS behind an NLB (AWS Load Balancer Controller). Copy to values-aws.yaml.
+hostname: cap.bupasec.com
+tlsSecret: cap-tls
+service:
+  type: LoadBalancer
+  loadBalancerClass: service.k8s.aws/nlb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip

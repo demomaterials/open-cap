@@ -1,0 +1,6 @@
+apiVersion: v2
+name: db-stack
+description: open-cap Postgres (asset definition database) and the idempotent schema Job
+type: application
+version: 0.1.0
+appVersion: "16"

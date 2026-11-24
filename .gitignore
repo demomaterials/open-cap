@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+# Local CA and certificates (private keys)
+deploy/scripts/local-ca/
+# Generated or real secrets
+deploy/scripts/secrets*.yaml
+!deploy/scripts/secrets.example.yaml

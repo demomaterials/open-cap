@@ -1,0 +1,18 @@
+postgres:
+  image: postgres:16-alpine
+  database: cap
+  serviceName: cap-db
+  port: 5432
+  storage: 10Gi
+  storageClass: ""          # cluster default
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 1Gi }
+
+# Secret created out-of-band (scripts/bootstrap-secrets.sh). Keys:
+#   POSTGRES_PASSWORD  superuser (only used by Postgres itself and the schema Job)
+#   APP_DB_PASSWORD    role cap_app — what every service connects as
+credentialsSecret: cap-db-credentials
+
+schema:
+  enabled: true

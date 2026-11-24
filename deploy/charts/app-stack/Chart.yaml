@@ -1,0 +1,6 @@
+apiVersion: v2
+name: app-stack
+description: open-cap services — frontend, backend (API), collector, evaluator (Rego/OPA), presenter (compliance API)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

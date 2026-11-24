@@ -1,0 +1,36 @@
+# Edge routing for {{ .Values.hostname }} (longest prefix wins):
+#   /api/compliance → presenter   (read-only compliance API)
+#   /api            → backend     (inventory, controls, connectors, auth)
+#   /webhooks       → collector   (GitHub / Azure DevOps webhooks; HMAC/secret checked per connector)
+#   /               → frontend    (SPA)
+# The evaluator has no route: it is only reachable in-cluster from the backend.
+{{- $routes := list
+  (dict "name" "cap-presenter" "prefix" "/api/compliance" "timeout" "60s")
+  (dict "name" "cap-backend"   "prefix" "/api"            "timeout" "60s")
+  (dict "name" "cap-collector" "prefix" "/webhooks"       "timeout" "30s")
+  (dict "name" "cap-frontend"  "prefix" "/"               "timeout" "30s") }}
+{{- range $routes }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .name }}
+  labels:
+    app.kubernetes.io/part-of: open-cap
+spec:
+  parentRefs:
+    - name: {{ $.Values.gatewayName }}
+      sectionName: https
+  hostnames:
+    - {{ $.Values.hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .prefix }}
+      timeouts:
+        request: {{ .timeout }}
+      backendRefs:
+        - name: {{ .name }}
+          port: 8080
+{{- end }}

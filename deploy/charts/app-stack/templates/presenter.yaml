@@ -1,0 +1,35 @@
+{{- $ctx := dict "root" . "name" "cap-presenter" "component" "presenter" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cap-presenter
+  labels:
+    {{- include "cap.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ .Values.presenter.replicas }}
+  selector:
+    matchLabels:
+      {{- include "cap.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cap.labels" $ctx | nindent 8 }}
+    spec:
+      {{- include "cap.imagePullSecrets" . | nindent 6 }}
+      {{- include "cap.podSecurity" . | nindent 6 }}
+      containers:
+        - name: presenter
+          image: {{ .Values.presenter.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            {{- include "cap.dbEnv" . | nindent 12 }}
+            {{- include "cap.secretEnv" (dict "root" . "key" "JWT_SECRET") | nindent 12 }}
+            - { name: SNAPSHOT_MINUTES, value: {{ .Values.presenter.snapshotMinutes | quote }} }
+          {{- include "cap.probes" . | nindent 10 }}
+          {{- include "cap.containerSecurity" . | nindent 10 }}
+          resources:
+            {{- toYaml .Values.presenter.resources | nindent 12 }}
+---
+{{ include "cap.service" $ctx }}

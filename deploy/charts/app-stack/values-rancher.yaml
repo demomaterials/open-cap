@@ -1,0 +1,4 @@
+# Rancher Desktop: images are built into the local Docker daemon (k3s uses it).
+hostname: cap.bupasec.com
+evaluator:
+  replicas: 1

@@ -1,0 +1,44 @@
+{{- $ctx := dict "root" . "name" "cap-frontend" "component" "frontend" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cap-frontend
+  labels:
+    {{- include "cap.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "cap.selector" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cap.labels" $ctx | nindent 8 }}
+    spec:
+      {{- include "cap.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: frontend
+          image: {{ .Values.frontend.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - { name: http, containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 20
+          {{- include "cap.containerSecurity" . | nindent 10 }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+{{ include "cap.service" $ctx }}

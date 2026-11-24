@@ -1,0 +1,16 @@
+# Public hostname served by the HTTPS listener.
+hostname: cap.bupasec.com
+gatewayClassName: cap
+gatewayName: cap-gateway
+# kubernetes.io/tls Secret in this namespace (created out-of-band by
+# scripts/make-local-ca.sh --apply, or your real certificate). Never templated.
+tlsSecret: cap-tls
+ports:
+  http: 80
+  https: 443
+service:
+  type: LoadBalancer
+  # Name of the Envoy data-plane Service (stable name for scripts/port-forward).
+  name: cap-gateway
+  annotations: {}
+  loadBalancerClass: ""

@@ -1,0 +1,80 @@
+# Data-plane shape for Gateways of this class.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ .Values.gatewayClassName }}-proxy
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: {{ .Values.service.type }}
+        {{- with .Values.service.name }}
+        name: {{ . }}
+        {{- end }}
+        {{- with .Values.service.loadBalancerClass }}
+        loadBalancerClass: {{ . }}
+        {{- end }}
+        {{- with .Values.service.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: {{ .Values.gatewayClassName }}
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: {{ .Values.gatewayClassName }}-proxy
+    namespace: {{ .Release.Namespace }}
+---
+# Listeners:
+#   http  — only the HTTPS redirect below attaches here
+#   https — the CAP host with TLS; app-stack HTTPRoutes attach here
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gatewayName }}
+spec:
+  gatewayClassName: {{ .Values.gatewayClassName }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.ports.http }}
+      hostname: {{ .Values.hostname | quote }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: {{ .Values.ports.https }}
+      hostname: {{ .Values.hostname | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ .Values.tlsSecret }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: https-redirect
+spec:
+  parentRefs:
+    - name: {{ .Values.gatewayName }}
+      sectionName: http
+  hostnames:
+    - {{ .Values.hostname | quote }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

@@ -1,0 +1,7 @@
+hostname: cap.bupasec.com
+imagePullPolicy: Always
+frontend:  { image: <account>.dkr.ecr.<region>.amazonaws.com/cap-frontend:<tag>,  replicas: 2 }
+backend:   { image: <account>.dkr.ecr.<region>.amazonaws.com/cap-backend:<tag>,   replicas: 2 }
+collector: { image: <account>.dkr.ecr.<region>.amazonaws.com/cap-collector:<tag>, replicas: 2 }
+evaluator: { image: <account>.dkr.ecr.<region>.amazonaws.com/cap-evaluator:<tag>, replicas: 3 }
+presenter: { image: <account>.dkr.ecr.<region>.amazonaws.com/cap-presenter:<tag>, replicas: 2 }

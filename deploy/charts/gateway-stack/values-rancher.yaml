@@ -1,0 +1,3 @@
+# Rancher Desktop: klipper-lb publishes 80/443 on the VM and localhost.
+hostname: cap.bupasec.com
+tlsSecret: cap-tls

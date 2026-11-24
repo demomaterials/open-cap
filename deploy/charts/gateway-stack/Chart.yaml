@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gateway-stack
+description: open-cap edge — Envoy Gateway GatewayClass, Gateway (HTTPS for the CAP host) and HTTP→HTTPS redirect
+type: application
+version: 0.1.0
+appVersion: "1.9.3"
